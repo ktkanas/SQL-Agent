@@ -1,6 +1,7 @@
+from langchain.agents import create_agent
 from langchain_ollama import ChatOllama
-from langgraph.prebuilt import create_react_agent
 
+from sql_agent.settings import settings
 from sql_agent.tools.execute_sql import run_sql
 from sql_agent.tools.get_schema import get_schema
 from sql_agent.tools.list_tables import list_tables
@@ -21,9 +22,9 @@ Your reasoning pattern:
 4. Run more queries to answer those follow-up questions.
 5. Only when all claims are backed by data, give the final answer."""
 
-llm = ChatOllama(model="qwen3:8b")
+llm = ChatOllama(model=settings.ollama_model)
 tools = [list_tables, get_schema, run_sql]
-agent = create_react_agent(llm, tools, prompt=SYSTEM_PROMPT)
+agent = create_agent(llm, tools, system_prompt=SYSTEM_PROMPT)
 
 
 def ask_database(question: str) -> dict:

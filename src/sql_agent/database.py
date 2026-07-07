@@ -1,12 +1,9 @@
-import os
-
 from sqlalchemy import create_engine
 
-DATABASE_URL = os.getenv(
-    "SQL_AGENT_DATABASE_URL",
-    "mssql+pyodbc://localhost/visaDB_copy"
-    "?driver=ODBC+Driver+17+for+SQL+Server"
-    "&trusted_connection=yes",
-)
+from sql_agent.settings import settings
 
-engine = create_engine(DATABASE_URL)
+engine = create_engine(
+    settings.database_url,
+    pool_pre_ping=True,
+    pool_recycle=1800,
+)

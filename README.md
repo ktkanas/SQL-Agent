@@ -67,6 +67,7 @@ SQL_AGENT_ALLOWED_ORIGINS       Comma-separated CORS origins, if needed
 SQL_AGENT_AGENT_TIMEOUT_SECONDS Max time for one agent request
 SQL_AGENT_MAX_QUESTION_CHARS    Max user question length
 SQL_AGENT_MAX_REQUEST_BYTES     Max HTTP request body size
+SQL_AGENT_ACCESS_KEY            Optional API access key for browser users
 ```
 
 PowerShell example:
@@ -80,6 +81,8 @@ python -m uvicorn sql_agent.web:app --host 127.0.0.1 --port 8000
 
 - Use a read-only SQL Server login. The app validates SQL, but database
   permissions are the real safety boundary.
+- Set `SQL_AGENT_ACCESS_KEY` for any shared environment. Users enter this key
+  in the browser before API calls are allowed.
 - Put the FastAPI app behind a reverse proxy such as IIS, Nginx, or a managed
   platform proxy for TLS, compression, and public routing.
 - Set `SQL_AGENT_ALLOWED_HOSTS` to the real domain names used in production.

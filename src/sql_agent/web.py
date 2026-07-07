@@ -20,6 +20,7 @@ from sql_agent.settings import settings
 
 WEB_DIR = Path(__file__).parent / "web"
 logger = logging.getLogger(__name__)
+PROTECTED_PREFIXES = ("/api/",)
 
 app = FastAPI(title=settings.app_name, version=settings.app_version)
 
@@ -29,7 +30,7 @@ if settings.allowed_origins:
         allow_origins=settings.allowed_origins,
         allow_credentials=False,
         allow_methods=["GET", "POST"],
-        allow_headers=["Content-Type", "X-Request-ID"],
+        allow_headers=["Content-Type", "X-Request-ID", "X-SQL-Agent-Key"],
     )
 
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.allowed_hosts)
@@ -49,6 +50,14 @@ class ChatResponse(BaseModel):
 @app.middleware("http")
 async def production_middleware(request: Request, call_next):
     request_id = request.headers.get("X-Request-ID", str(uuid.uuid4()))
+    if request.url.path.startswith(PROTECTED_PREFIXES):
+        provided_key = request.headers.get("X-SQL-Agent-Key", "")
+        if not settings.access_key_matches(provided_key):
+            return JSONResponse(
+                status_code=401,
+                content={"detail": "Access key required.", "request_id": request_id},
+            )
+
     content_length = request.headers.get("content-length")
     try:
         request_bytes = int(content_length) if content_length else 0
@@ -84,6 +93,16 @@ async def production_middleware(request: Request, call_next):
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["Referrer-Policy"] = "no-referrer"
     response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+    response.headers["Content-Security-Policy"] = (
+        "default-src 'self'; "
+        "script-src 'self'; "
+        "style-src 'self' 'unsafe-inline'; "
+        "img-src 'self' data:; "
+        "connect-src 'self'; "
+        "frame-ancestors 'none'; "
+        "base-uri 'self'; "
+        "form-action 'self'"
+    )
     return response
 
 

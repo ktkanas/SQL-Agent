@@ -1,4 +1,5 @@
 import os
+import secrets
 from dataclasses import dataclass, field
 
 
@@ -43,6 +44,7 @@ class Settings:
     max_question_chars: int = _get_int("SQL_AGENT_MAX_QUESTION_CHARS", 2000)
     max_request_bytes: int = _get_int("SQL_AGENT_MAX_REQUEST_BYTES", 16_384)
     agent_timeout_seconds: int = _get_int("SQL_AGENT_AGENT_TIMEOUT_SECONDS", 120)
+    access_key: str = os.getenv("SQL_AGENT_ACCESS_KEY", "")
     allowed_origins: list[str] = field(default_factory=list)
     allowed_hosts: list[str] = field(default_factory=list)
 
@@ -52,6 +54,11 @@ class Settings:
         if not hosts:
             hosts = ["127.0.0.1", "localhost"]
         object.__setattr__(self, "allowed_hosts", hosts)
+
+    def access_key_matches(self, value: str) -> bool:
+        if not self.access_key:
+            return True
+        return secrets.compare_digest(value, self.access_key)
 
 
 settings = Settings()

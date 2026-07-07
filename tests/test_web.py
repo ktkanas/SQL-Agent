@@ -42,3 +42,17 @@ def test_chat_returns_agent_trace(monkeypatch):
         "sql_queries": [],
         "tool_results": [],
     }
+
+
+def test_api_key_required_when_configured(monkeypatch):
+    original_key = web.settings.access_key
+    object.__setattr__(web.settings, "access_key", "secret")
+
+    try:
+        blocked = client.get("/api/tables")
+        allowed = client.get("/api/tables", headers={"X-SQL-Agent-Key": "secret"})
+    finally:
+        object.__setattr__(web.settings, "access_key", original_key)
+
+    assert blocked.status_code == 401
+    assert allowed.status_code in {200, 503}

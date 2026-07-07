@@ -1,0 +1,104 @@
+
+If you're testing a SQL Agent on Chinook, don't just test simple SELECT queries. Test different levels of reasoning.
+
+Level 1: Basic Retrieval
+
+List all genres.
+Show the first 10 tracks.
+Find all albums by AC/DC.
+How many tracks are in the database?
+List all customers from Germany.
+Show all employees who are sales support agents.
+
+Level 2: Filtering
+
+Which tracks are longer than 5 minutes?
+Find customers from Canada.
+Show albums released by artists whose name contains 'Queen'.
+List tracks that cost more than $0.99.
+Find invoices created in 2012.
+
+Level 3: Aggregations
+
+How many tracks belong to each genre?
+Which genre contains the most tracks?
+What is the average track length by genre?
+Which artist has the most albums?
+How many customers are there in each country?
+What is the total revenue generated from invoices?
+
+Level 4: Joins
+
+Show all tracks along with their album names.
+List album names and their artists.
+Show customer names together with their support representative.
+Display invoice information along with customer names.
+List playlist names and the tracks they contain.
+
+Level 5: Multi-Hop Reasoning
+
+(These are the questions where many SQL agents start failing.)
+
+Which artist has the highest total number of tracks?
+Which customer spent the most money?
+Which employee supports the largest number of customers?
+Which genre generated the highest revenue?
+Which album contains the most tracks?
+Which country generated the most sales?
+What are the top 5 selling artists?
+
+Level 6: Time-Based Analytics
+
+How many invoices were generated each year?
+Which month had the highest sales?
+Show revenue trends by year.
+What was the average invoice value in 2013?
+Which customer made the earliest purchase?
+
+Level 7: Ranking Questions
+
+Top 10 customers by spending.
+Top 5 longest tracks.
+Top 3 genres by revenue.
+Top 10 albums by number of tracks.
+Top artists by average track duration.
+
+Level 8: Business Intelligence Style Questions
+
+(These are excellent for testing a production SQL agent.)
+
+Who are our most valuable customers?
+Which genres should we promote based on revenue?
+Which countries have the highest customer concentration?
+Which artists generate the most sales?
+What percentage of revenue comes from the top 10 customers?
+Which playlists contain the most popular tracks?
+What is the average revenue per customer?
+
+Level 9: Hard SQL Agent Tests
+
+(These require the agent to discover relationships across many tables.)
+
+Find customers who purchased tracks from more than 5 different genres.
+Which artist generated the highest revenue in a single invoice?
+Find customers whose spending is above the average customer spending.
+Which genre has the largest average invoice contribution?
+Find artists that appear in the most playlists.
+Which customer has purchased tracks from the greatest number of artists?
+Which artists have tracks in every playlist?
+Find albums where every track is longer than the album-wide average track length.
+
+Level 10: Agentic Evaluation Set
+
+(These are the types of questions I would use to benchmark a LangGraph/LangChain SQL Agent:)
+
+What is the best-selling genre?
+Which artist generated the most revenue?
+Which employee manages the highest-value customers?
+What are the top 3 genres in Germany?
+Which customers have never made a purchase?
+Which playlists contain tracks from more than 10 genres?
+Find the artist whose albums have the highest average track length.
+Show customers whose spending increased year-over-year.
+Which genre has the greatest revenue per track?
+What is the shortest path from customer to artist in the schema and use it to find the top artist purchased by each custom

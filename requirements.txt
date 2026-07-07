@@ -1,0 +1,7 @@
+langchain
+langchain-ollama
+langgraph
+pandas
+pyodbc
+sqlalchemy
+sqlglot

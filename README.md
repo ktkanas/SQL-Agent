@@ -28,3 +28,21 @@ A local analytical SQL agent that uses LangGraph, Ollama, and Microsoft SQL Serv
 3. Ensure Ollama and SQL Server are running and configured.
 4. Start the agent with `sql-agent` or `python main.py`.
 
+## Web app
+
+Start the browser UI:
+
+```powershell
+python -m uvicorn sql_agent.web:app --host 127.0.0.1 --port 8000
+```
+
+Then open `http://127.0.0.1:8000`.
+
+By default the app connects to `localhost/visaDB_copy` with Windows trusted
+authentication. To use a different SQL Server connection, set
+`SQL_AGENT_DATABASE_URL` before starting the server:
+
+```powershell
+$env:SQL_AGENT_DATABASE_URL = "mssql+pyodbc://localhost/YourDatabase?driver=ODBC+Driver+17+for+SQL+Server&trusted_connection=yes"
+python -m uvicorn sql_agent.web:app --host 127.0.0.1 --port 8000
+```

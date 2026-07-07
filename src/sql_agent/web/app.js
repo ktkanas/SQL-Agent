@@ -5,11 +5,97 @@ const traceListEl = document.querySelector("#traceList");
 const traceEmptyEl = document.querySelector("#traceEmpty");
 const tableListEl = document.querySelector("#tableList");
 const connectionStateEl = document.querySelector("#connectionState");
+const tableCountEl = document.querySelector("#tableCount");
 const refreshTablesEl = document.querySelector("#refreshTables");
 const clearTraceEl = document.querySelector("#clearTrace");
 
+function escapeHtml(value) {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function formatInline(value) {
+  return escapeHtml(value)
+    .replace(/`([^`]+)`/g, "<code>$1</code>")
+    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+}
+
+function isTableSeparator(line) {
+  return /^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?\s*$/.test(line);
+}
+
+function renderMarkdown(text) {
+  const lines = text.split(/\r?\n/);
+  const chunks = [];
+  let listItems = [];
+
+  function flushList() {
+    if (!listItems.length) {
+      return;
+    }
+    chunks.push(`<ul>${listItems.map((item) => `<li>${formatInline(item)}</li>`).join("")}</ul>`);
+    listItems = [];
+  }
+
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index].trim();
+
+    if (!line) {
+      flushList();
+      continue;
+    }
+
+    if (line.includes("|") && lines[index + 1] && isTableSeparator(lines[index + 1])) {
+      flushList();
+      const headers = line.split("|").map((cell) => cell.trim()).filter(Boolean);
+      index += 2;
+      const rows = [];
+
+      while (index < lines.length && lines[index].includes("|")) {
+        rows.push(lines[index].split("|").map((cell) => cell.trim()).filter(Boolean));
+        index += 1;
+      }
+      index -= 1;
+
+      chunks.push(`
+        <table class="message-table">
+          <thead><tr>${headers.map((cell) => `<th>${formatInline(cell)}</th>`).join("")}</tr></thead>
+          <tbody>${rows.map((row) => `<tr>${row.map((cell) => `<td>${formatInline(cell)}</td>`).join("")}</tr>`).join("")}</tbody>
+        </table>
+      `);
+      continue;
+    }
+
+    if (/^#{2,4}\s+/.test(line)) {
+      flushList();
+      chunks.push(`<h3>${formatInline(line.replace(/^#{2,4}\s+/, ""))}</h3>`);
+      continue;
+    }
+
+    if (/^[-*]\s+/.test(line)) {
+      listItems.push(line.replace(/^[-*]\s+/, ""));
+      continue;
+    }
+
+    if (/^\d+\.\s+/.test(line)) {
+      listItems.push(line.replace(/^\d+\.\s+/, ""));
+      continue;
+    }
+
+    flushList();
+    chunks.push(`<p>${formatInline(line)}</p>`);
+  }
+
+  flushList();
+  return chunks.join("");
+}
+
 function scrollMessages() {
-  messagesEl.scrollTop = messagesEl.scrollHeight;
+  messagesEl.scrollTo({ top: messagesEl.scrollHeight, behavior: "smooth" });
 }
 
 function addMessage(role, text, loading = false) {
@@ -23,36 +109,41 @@ function addMessage(role, text, loading = false) {
   const bubble = document.createElement("div");
   bubble.className = "bubble";
 
-  const paragraph = document.createElement("p");
-  paragraph.textContent = text;
-  bubble.appendChild(paragraph);
+  const content = document.createElement("div");
+  content.className = "message-content";
+  content.innerHTML = loading
+    ? '<span class="thinking">Thinking <span></span><span></span><span></span></span>'
+    : renderMarkdown(text);
+  bubble.appendChild(content);
 
   article.append(avatar, bubble);
   messagesEl.appendChild(article);
   scrollMessages();
 
-  return { article, paragraph };
+  return { article, content };
 }
 
 function addTrace(title, content) {
   traceEmptyEl.style.display = "none";
 
-  const card = document.createElement("section");
+  const card = document.createElement("details");
   card.className = "trace-card";
+  card.open = traceListEl.children.length === 0;
 
-  const heading = document.createElement("strong");
-  heading.textContent = title;
+  const summary = document.createElement("summary");
+  summary.innerHTML = `${escapeHtml(title)} <span>${content ? `${content.length} chars` : "empty"}</span>`;
 
   const pre = document.createElement("pre");
   pre.textContent = content || "(empty)";
 
-  card.append(heading, pre);
+  card.append(summary, pre);
   traceListEl.prepend(card);
 }
 
 async function loadTables() {
   tableListEl.innerHTML = "";
   connectionStateEl.textContent = "Checking database";
+  tableCountEl.textContent = "Refreshing schema";
 
   try {
     const response = await fetch("/api/tables");
@@ -61,7 +152,8 @@ async function loadTables() {
     }
 
     const data = await response.json();
-    connectionStateEl.textContent = `${data.tables.length} tables connected`;
+    connectionStateEl.textContent = "Database online";
+    tableCountEl.textContent = `${data.tables.length} table${data.tables.length === 1 ? "" : "s"} available`;
 
     if (!data.tables.length) {
       tableListEl.innerHTML = '<div class="trace-empty">No tables found.</div>';
@@ -72,9 +164,21 @@ async function loadTables() {
       const button = document.createElement("button");
       button.className = "table-item";
       button.type = "button";
-      button.textContent = table;
+
+      const name = document.createElement("span");
+      name.className = "table-name";
+      name.textContent = table;
+
+      const meta = document.createElement("span");
+      meta.className = "table-meta";
+      meta.textContent = "Click to draft a profiling question";
+
+      const label = document.createElement("span");
+      label.append(name, meta);
+      button.appendChild(label);
+
       button.addEventListener("click", () => {
-        inputEl.value = `Describe the ${table} table and show useful sample rows`;
+        inputEl.value = `Profile the ${table} table: columns, row count, useful segments, and data quality notes`;
         inputEl.focus();
         resizeInput();
       });
@@ -82,6 +186,7 @@ async function loadTables() {
     }
   } catch (error) {
     connectionStateEl.textContent = "Database offline";
+    tableCountEl.textContent = "Connection failed";
     tableListEl.innerHTML = '<div class="trace-empty">Could not load tables.</div>';
   }
 }
@@ -93,7 +198,7 @@ function resizeInput() {
 
 async function ask(question) {
   addMessage("user", question);
-  const pending = addMessage("assistant", "Working", true);
+  const pending = addMessage("assistant", "", true);
 
   formEl.querySelector("button").disabled = true;
 
@@ -111,10 +216,10 @@ async function ask(question) {
 
     const data = await response.json();
     pending.article.classList.remove("loading");
-    pending.paragraph.textContent = data.answer || "No answer returned.";
+    pending.content.innerHTML = renderMarkdown(data.answer || "No answer returned.");
 
     for (const sql of data.sql_queries || []) {
-      addTrace("SQL", sql);
+      addTrace("SQL query", sql);
     }
 
     for (const result of data.tool_results || []) {
@@ -122,7 +227,7 @@ async function ask(question) {
     }
   } catch (error) {
     pending.article.classList.remove("loading");
-    pending.paragraph.textContent = error.message;
+    pending.content.innerHTML = renderMarkdown(error.message);
   } finally {
     formEl.querySelector("button").disabled = false;
     scrollMessages();

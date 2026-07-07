@@ -3,10 +3,12 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#eef3f1" />
     <title>SQL Agent</title>
     <link rel="stylesheet" href="/assets/styles.css" />
   </head>
   <body>
+    <div class="ambient-grid" aria-hidden="true"></div>
     <div class="shell">
       <aside class="sidebar" aria-label="Database tables">
         <div class="brand">
@@ -20,7 +22,10 @@
         </div>
 
         <div class="panel-heading">
-          <span>Tables</span>
+          <div>
+            <span>Schema</span>
+            <small id="tableCount">Waiting for connection</small>
+          </div>
           <button class="icon-button" id="refreshTables" aria-label="Refresh tables" title="Refresh tables">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 0 1-15.4 6.4M3 12A9 9 0 0 1 18.4 5.6M18 2v4h-4M6 22v-4h4"/></svg>
           </button>
@@ -32,11 +37,13 @@
         <header class="topbar">
           <div>
             <h1>Ask your database</h1>
-            <p>Read-only analysis powered by your local SQL agent.</p>
+            <p>Explore tables, run read-only analysis, and inspect every query the agent used.</p>
           </div>
-          <div class="status-pill">
-            <span></span>
-            Local model
+          <div class="topbar-actions">
+            <div class="status-pill">
+              <span></span>
+              Local model
+            </div>
           </div>
         </header>
 
@@ -44,11 +51,13 @@
           <article class="message assistant">
             <div class="avatar">AI</div>
             <div class="bubble">
-              <p>Ask a question about the connected SQL Server database.</p>
+              <div class="message-content">
+                <p>Ask a question about the connected SQL Server database.</p>
+              </div>
               <div class="suggestions">
                 <button type="button">Show me the available tables</button>
-                <button type="button">Find the top customer segments</button>
-                <button type="button">Compare recent performance by category</button>
+                <button type="button">Profile the customer table</button>
+                <button type="button">Find useful segments in the data</button>
               </div>
             </div>
           </article>
@@ -64,7 +73,10 @@
 
       <aside class="trace-panel" aria-label="Agent trace">
         <div class="panel-heading">
-          <span>Trace</span>
+          <div>
+            <span>Evidence</span>
+            <small>Queries and tool output</small>
+          </div>
           <button class="icon-button" id="clearTrace" aria-label="Clear trace" title="Clear trace">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 15h10l1-15"/></svg>
           </button>
